@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -12,6 +11,7 @@ import (
 	"time"
 )
 
+// TokenResultSet struct to parse json token from server
 type TokenResultSet struct {
 	AccessToken   string `json:"access_token"`
 	IdentityToken string `json:"id_token"`
@@ -21,6 +21,7 @@ type TokenResultSet struct {
 	ExpiresAt     int64  `json:"expires_at"`
 }
 
+// AccessTokenResultSet struct to parse json token from server
 type AccessTokenResultSet struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
@@ -28,10 +29,11 @@ type AccessTokenResultSet struct {
 	ExpiresAt   int64  `json:"expires_at"`
 }
 
-func BuildCodeAuthorisationRequest(configuration WellKnownConfiguration, clientID string, redirectURI string, scopes []string, state string, codeChallenge string) string {
+// BuildCodeAuthorisationRequest build Xero OpenID url for user to click and allow access to Xero resources
+func BuildCodeAuthorisationRequest(configuration WellKnownConfiguration, clientID string, redirectURI string, scopes []string, state string, codeChallenge string) (string, error) {
 	urlToBuild, urlErr := url.Parse(configuration.AuthorisationEndpoint)
 	if urlErr != nil {
-		log.Fatal(urlErr)
+		return "", urlErr
 	}
 
 	scope := strings.Join(scopes, " ")
@@ -51,14 +53,16 @@ func BuildCodeAuthorisationRequest(configuration WellKnownConfiguration, clientI
 
 	urlToBuild.RawQuery = q.Encode()
 
-	return urlToBuild.String()
+	return urlToBuild.String(), nil
 }
 
+// AuthorisationResponse struct to parse json token from server
 type AuthorisationResponse struct {
 	Code  string
 	State string
 }
 
+// ValidateAuthorisationResponse compare url state and check if it is valid
 func ValidateAuthorisationResponse(url *url.URL, state string) (AuthorisationResponse, error) {
 	var response AuthorisationResponse
 	var query = url.Query()
@@ -81,7 +85,8 @@ func ValidateAuthorisationResponse(url *url.URL, state string) (AuthorisationRes
 	return response, nil
 }
 
-func FormPost(tokenEndpoint string, clientID string, clientSecret string, formData url.Values, result interface{}) error {
+// formPost sends http post request to Xero OpenID services
+func formPost(tokenEndpoint string, clientID string, clientSecret string, formData url.Values, result interface{}) error {
 	client := &http.Client{}
 
 	encoded := formData.Encode()
@@ -130,6 +135,7 @@ func FormPost(tokenEndpoint string, clientID string, clientSecret string, formDa
 	return nil
 }
 
+// ExchangeCodeForToken turn code into token
 func ExchangeCodeForToken(tokenEndpoint string, code string, clientID string, clientSecret string, codeVerifier string, redirectURI string) (TokenResultSet, error) {
 	var result TokenResultSet
 
@@ -149,7 +155,7 @@ func ExchangeCodeForToken(tokenEndpoint string, code string, clientID string, cl
 		formData.Add("client_id", clientID)
 	}
 
-	var postError = FormPost(tokenEndpoint, clientID, clientSecret, formData, &result)
+	var postError = formPost(tokenEndpoint, clientID, clientSecret, formData, &result)
 	if postError != nil {
 		return result, postError
 	}
@@ -159,26 +165,8 @@ func ExchangeCodeForToken(tokenEndpoint string, code string, clientID string, cl
 	return result, nil
 }
 
-func RequestWithClientCredentials(tokenEndpoint string, clientID string, clientSecret string, scope string) (AccessTokenResultSet, error) {
-	var result AccessTokenResultSet
-
-	formData := url.Values{
-		"grant_type": {"client_credentials"},
-		"scope":      {scope},
-	}
-
-	var postError = FormPost(tokenEndpoint, clientID, clientSecret, formData, &result)
-	if postError != nil {
-		return result, postError
-	}
-
-	result.ExpiresAt = AbsoluteExpiry(time.Now(), result.ExpiresIn)
-
-	return result, nil
-}
-
+// AbsoluteExpiry remaining expiry time in seconds
 func AbsoluteExpiry(now time.Time, expiresIn int) int64 {
-	// ExpiresIn returns expiry time in seconds
 	var future = now.Add(time.Second * time.Duration(expiresIn))
 	// Subtract a minute to account for clock skew etc
 	future.Add(time.Minute * time.Duration(-1))

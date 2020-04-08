@@ -4,6 +4,7 @@ import (
 	"net/url"
 )
 
+// RefreshResult parse result of refreshed Token
 type RefreshResult struct {
 	RefreshToken string `json:"refresh_token"`
 	AccessToken  string `json:"access_token"`
@@ -11,6 +12,7 @@ type RefreshResult struct {
 	TokenType    string `json:"token_type"`
 }
 
+// RefreshToken refresh provided token to extend expiry time
 func RefreshToken(authority string, clientID string, clientSecret string, refreshToken string) (RefreshResult, error) {
 	var result RefreshResult
 
@@ -26,7 +28,7 @@ func RefreshToken(authority string, clientID string, clientSecret string, refres
 		"refresh_token": {refreshToken},
 	}
 
-	var postError = FormPost(metadata.TokenEndpoint, clientID, clientSecret, formData, &result)
+	var postError = formPost(metadata.TokenEndpoint, clientID, clientSecret, formData, &result)
 	if postError != nil {
 		return result, postError
 	}

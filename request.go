@@ -10,17 +10,17 @@ import (
 )
 
 // Request starts callback server and request token
-func Request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient) {
-	// filler from original code
+func Request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient) error {
+	// from original code
 	codeVerifier := ""
 	codeChallenge := ""
 
 	state, stateErr := oidc.GenerateRandomStringURLSafe(24)
 	if stateErr != nil {
-		panic("failed to generate random state. Check that your OS has a crypto implementation available")
+		return fmt.Errorf("failed to generate random state. Check that your OS has a crypto implementation available")
 	}
 
-	authorisationURL := oidc.BuildCodeAuthorisationRequest(
+	authorisationURL, err := oidc.BuildCodeAuthorisationRequest(
 		wellKnownConfig,
 		client.ClientID,
 		client.RedirectURL.String(),
@@ -28,6 +28,9 @@ func Request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient) {
 		state,
 		codeChallenge,
 	)
+	if err != nil {
+		return fmt.Errorf("failed to build authorisation request %w", err)
+	}
 
 	m := http.NewServeMux()
 	s := http.Server{
@@ -68,4 +71,6 @@ func Request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient) {
 			log.Fatalln(err)
 		}
 	}
+
+	return nil
 }
