@@ -1,6 +1,6 @@
-# XOAuth example
+# XOAuth lite
 
-> A lite version of XOAuth for example
+> A reduced version of XOAuth
 
 XOAuth provides a simple way to interact with OpenId Connect identity providers from your local CLI. Many OIDC providers only support the Authorisation Code grant - and that means running a local web server to receive the authorisation response, or using something like [Postman](https://www.postman.com/). These can be tricky to fit into a scripted workflow in a shell.
 
