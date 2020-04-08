@@ -7,11 +7,12 @@ import (
 	"net/url"
 )
 
+// WellKnownPath Xero public path holding OpenID configuration
 const WellKnownPath = "/.well-known/openid-configuration"
 
+// GetSchemeAndHost extract only scheme and host
 func GetSchemeAndHost(urlString string) (string, error) {
 	parsed, err := url.Parse(urlString)
-
 	if err != nil {
 		return "", err
 	}
@@ -19,32 +20,32 @@ func GetSchemeAndHost(urlString string) (string, error) {
 	return fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host), nil
 }
 
+// WellKnownConfiguration struct to parse JSON OpenID configuration
 type WellKnownConfiguration struct {
 	AuthorisationEndpoint string `json:"authorization_endpoint"`
 	TokenEndpoint         string `json:"token_endpoint"`
-	JwksUri               string `json:"jwks_uri"`
+	JwksURI               string `json:"jwks_uri"`
 	Issuer                string `json:"issuer"`
 }
 
+// GetMetadata discover metadata and construct OpenID configuration
 func GetMetadata(authority string) (WellKnownConfiguration, error) {
-	var authorityBaseUrl, parseErr = GetSchemeAndHost(authority)
 	var result WellKnownConfiguration
 
+	var authorityBaseURL, parseErr = GetSchemeAndHost(authority)
 	if parseErr != nil {
 		return result, parseErr
 	}
 
-	var wellKnownUrl = fmt.Sprintf("%s%s", authorityBaseUrl, WellKnownPath)
+	var wellKnownURL = fmt.Sprintf("%s%s", authorityBaseURL, WellKnownPath)
 
-	fmt.Printf("Requesting OIDC metadata from %s\n", wellKnownUrl)
-
-	response, requestErr := http.Get(wellKnownUrl)
+	response, requestErr := http.Get(wellKnownURL)
 	if requestErr != nil {
 		return result, requestErr
 	}
 
 	if response.StatusCode != 200 {
-		return result, fmt.Errorf("got %d when requesting %s\n", response.StatusCode, wellKnownUrl)
+		return result, fmt.Errorf("got %d when requesting %s", response.StatusCode, wellKnownURL)
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -52,8 +53,6 @@ func GetMetadata(authority string) (WellKnownConfiguration, error) {
 	if decodeErr != nil {
 		return result, decodeErr
 	}
-
-	fmt.Printf("Received OIDC metadata for authority: %s\n", result.Issuer)
 
 	if result.TokenEndpoint == "" {
 		return result, fmt.Errorf("no token endpoint in OIDC metadata")

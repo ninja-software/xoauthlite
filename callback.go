@@ -13,12 +13,11 @@ import (
 // renderAndLogError prints the error message to the browser, then shut down the web server gracefully
 func renderAndLogError(w http.ResponseWriter, cancelFunc context.CancelFunc, errorMessage string) {
 	_, streamErr := fmt.Fprintf(w, errorMessage)
-
-	log.Printf(errorMessage)
-
 	if streamErr != nil {
 		log.Printf("Failed to write to stream %v\n", streamErr)
 	}
+
+	echo(errorMessage)
 
 	cancelFunc()
 }
@@ -30,9 +29,9 @@ func handleOidcCallback(
 	w http.ResponseWriter,
 	r *http.Request,
 	clientName string,
-	clientId string,
+	clientID string,
 	clientSecret string,
-	redirectUri string,
+	redirectURI string,
 	wellKnownConfig oidc.WellKnownConfiguration,
 	state string,
 	codeVerifier string,
@@ -44,14 +43,14 @@ func handleOidcCallback(
 		return
 	}
 
-	log.Println("Received OIDC response")
-	var result, codeExchangeErr = oidc.ExchangeCodeForToken(wellKnownConfig.TokenEndpoint, authorisationResponse.Code, clientId, clientSecret, codeVerifier, redirectUri)
+	echo("Received OIDC response")
+	var result, codeExchangeErr = oidc.ExchangeCodeForToken(wellKnownConfig.TokenEndpoint, authorisationResponse.Code, clientID, clientSecret, codeVerifier, redirectURI)
 	if codeExchangeErr != nil {
 		renderAndLogError(w, cancel, fmt.Sprintf("%v", codeExchangeErr))
 		return
 	}
 
-	log.Println("Validating token")
+	echo("Validating token")
 	var claims, validateErr = oidc.ValidateToken(result.IdentityToken, wellKnownConfig)
 	if validateErr != nil {
 		renderAndLogError(w, cancel, fmt.Sprintf("%v", validateErr))
@@ -68,7 +67,7 @@ func handleOidcCallback(
 	var viewModel = TokenResultViewModel{
 		AccessToken:  result.AccessToken,
 		RefreshToken: result.RefreshToken,
-		IdToken:      result.IdentityToken,
+		IDToken:      result.IdentityToken,
 		Claims:       claims,
 		Authority:    wellKnownConfig.Issuer,
 	}

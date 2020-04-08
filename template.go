@@ -1,13 +1,15 @@
 package xoauthexample
 
+// TokenResultViewModel holds data for the web result
 type TokenResultViewModel struct {
 	AccessToken  string
 	RefreshToken string
-	IdToken      string
+	IDToken      string
 	Claims       interface{}
 	Authority    string
 }
 
+// TokenResultView template for the web result
 func TokenResultView() string {
 	return `
 <!doctype html>
@@ -32,7 +34,7 @@ func TokenResultView() string {
 				refresh token: {{.RefreshToken}}
 			</li>
 			<li>
-				identity token: {{.IdToken}}
+				identity token: {{.IDToken}}
 			</li>
 		</ul>
 		

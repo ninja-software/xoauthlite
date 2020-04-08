@@ -28,7 +28,7 @@ type AccessTokenResultSet struct {
 	ExpiresAt   int64  `json:"expires_at"`
 }
 
-func BuildCodeAuthorisationRequest(configuration WellKnownConfiguration, clientId string, redirectUri string, scopes []string, state string, codeChallenge string) string {
+func BuildCodeAuthorisationRequest(configuration WellKnownConfiguration, clientID string, redirectURI string, scopes []string, state string, codeChallenge string) string {
 	urlToBuild, urlErr := url.Parse(configuration.AuthorisationEndpoint)
 	if urlErr != nil {
 		log.Fatal(urlErr)
@@ -39,8 +39,8 @@ func BuildCodeAuthorisationRequest(configuration WellKnownConfiguration, clientI
 	q := url.Values{}
 	q.Add("response_type", "code")
 	q.Add("response_mode", "query")
-	q.Add("client_id", clientId)
-	q.Add("redirect_uri", redirectUri)
+	q.Add("client_id", clientID)
+	q.Add("redirect_uri", redirectURI)
 	q.Add("scope", scope)
 	q.Add("state", state)
 
@@ -81,12 +81,11 @@ func ValidateAuthorisationResponse(url *url.URL, state string) (AuthorisationRes
 	return response, nil
 }
 
-func FormPost(tokenEndpoint string, clientId string, clientSecret string, formData url.Values, result interface{}) error {
+func FormPost(tokenEndpoint string, clientID string, clientSecret string, formData url.Values, result interface{}) error {
 	client := &http.Client{}
 
 	encoded := formData.Encode()
 	request, requestBuildErr := http.NewRequest("POST", tokenEndpoint, strings.NewReader(encoded))
-
 	if requestBuildErr != nil {
 		return requestBuildErr
 	}
@@ -94,15 +93,14 @@ func FormPost(tokenEndpoint string, clientId string, clientSecret string, formDa
 	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	if clientSecret != "" {
-		request.SetBasicAuth(clientId, clientSecret)
+		request.SetBasicAuth(clientID, clientSecret)
 	}
 
 	request.Header.Add("Content-Length", strconv.Itoa(len(encoded)))
 
 	response, responseErr := client.Do(request)
-
 	if responseErr != nil {
-		return errors.New(fmt.Sprintf("Error POSTing code %v", responseErr))
+		return fmt.Errorf("Error POSTing code %w", responseErr)
 	}
 
 	decoder := json.NewDecoder(response.Body)
@@ -126,21 +124,19 @@ func FormPost(tokenEndpoint string, clientId string, clientSecret string, formDa
 
 	decodeErr := decoder.Decode(&result)
 	if decodeErr != nil {
-		return errors.New(fmt.Sprintf("failed to decode JSON %v", decodeErr))
+		return fmt.Errorf("failed to decode JSON %w", decodeErr)
 	}
 
 	return nil
 }
 
-func ExchangeCodeForToken(tokenEndpoint string, code string, clientId string, clientSecret string, codeVerifier string, redirectUri string) (TokenResultSet, error) {
+func ExchangeCodeForToken(tokenEndpoint string, code string, clientID string, clientSecret string, codeVerifier string, redirectURI string) (TokenResultSet, error) {
 	var result TokenResultSet
-
-	log.Printf("Exchanging code at token endpoint: %s\n", tokenEndpoint)
 
 	formData := url.Values{
 		"code":         {code},
 		"grant_type":   {"authorization_code"},
-		"redirect_uri": {redirectUri},
+		"redirect_uri": {redirectURI},
 	}
 
 	// https://tools.ietf.org/html/rfc6749#section-4.1.3
@@ -150,10 +146,10 @@ func ExchangeCodeForToken(tokenEndpoint string, code string, clientId string, cl
 
 	// https://tools.ietf.org/html/rfc6749#section-4.1.3
 	if clientSecret == "" {
-		formData.Add("client_id", clientId)
+		formData.Add("client_id", clientID)
 	}
 
-	var postError = FormPost(tokenEndpoint, clientId, clientSecret, formData, &result)
+	var postError = FormPost(tokenEndpoint, clientID, clientSecret, formData, &result)
 	if postError != nil {
 		return result, postError
 	}
@@ -163,17 +159,15 @@ func ExchangeCodeForToken(tokenEndpoint string, code string, clientId string, cl
 	return result, nil
 }
 
-func RequestWithClientCredentials(tokenEndpoint string, clientId string, clientSecret string, scope string) (AccessTokenResultSet, error) {
+func RequestWithClientCredentials(tokenEndpoint string, clientID string, clientSecret string, scope string) (AccessTokenResultSet, error) {
 	var result AccessTokenResultSet
-
-	log.Printf("Requesting token with client credentials grant: %s\n", tokenEndpoint)
 
 	formData := url.Values{
 		"grant_type": {"client_credentials"},
 		"scope":      {scope},
 	}
 
-	var postError = FormPost(tokenEndpoint, clientId, clientSecret, formData, &result)
+	var postError = FormPost(tokenEndpoint, clientID, clientSecret, formData, &result)
 	if postError != nil {
 		return result, postError
 	}

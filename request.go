@@ -9,18 +9,18 @@ import (
 	"github.com/ninja-software/xoauth-example/oidc"
 )
 
+// Request starts callback server and request token
 func Request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient) {
 	// filler from original code
 	codeVerifier := ""
 	codeChallenge := ""
-	dryRun := false
 
 	state, stateErr := oidc.GenerateRandomStringURLSafe(24)
 	if stateErr != nil {
 		panic("failed to generate random state. Check that your OS has a crypto implementation available")
 	}
 
-	authorisationUrl := oidc.BuildCodeAuthorisationRequest(
+	authorisationURL := oidc.BuildCodeAuthorisationRequest(
 		wellKnownConfig,
 		client.ClientID,
 		client.RedirectURL.String(),
@@ -28,11 +28,6 @@ func Request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient) {
 		state,
 		codeChallenge,
 	)
-
-	if dryRun {
-		fmt.Println("Dry run, authorisation request URL", authorisationUrl)
-		return
-	}
 
 	m := http.NewServeMux()
 	s := http.Server{
@@ -57,7 +52,7 @@ func Request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient) {
 		)
 	})
 
-	fmt.Println("Open browser to", authorisationUrl)
+	fmt.Println("Open browser to", authorisationURL)
 
 	go func() {
 		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {

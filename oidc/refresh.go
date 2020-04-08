@@ -1,7 +1,6 @@
 package oidc
 
 import (
-	"log"
 	"net/url"
 )
 
@@ -12,24 +11,22 @@ type RefreshResult struct {
 	TokenType    string `json:"token_type"`
 }
 
-func RefreshToken(authority string, clientId string, clientSecret string, refreshToken string) (RefreshResult, error) {
+func RefreshToken(authority string, clientID string, clientSecret string, refreshToken string) (RefreshResult, error) {
 	var result RefreshResult
 
 	var metadata, metadataErr = GetMetadata(authority)
-
 	if metadataErr != nil {
 		return result, metadataErr
 	}
 
-	log.Printf("Exchanging refresh_token at token endpoint: %s\n", metadata.TokenEndpoint)
+	echo("Exchanging refresh_token at token endpoint: %s", metadata.TokenEndpoint)
 
 	formData := url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {refreshToken},
 	}
 
-	var postError = FormPost(metadata.TokenEndpoint, clientId, clientSecret, formData, &result)
-
+	var postError = FormPost(metadata.TokenEndpoint, clientID, clientSecret, formData, &result)
 	if postError != nil {
 		return result, postError
 	}
