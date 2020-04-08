@@ -1,4 +1,4 @@
-package main
+package xoauthexample
 
 type TokenResultViewModel struct {
 	AccessToken  string

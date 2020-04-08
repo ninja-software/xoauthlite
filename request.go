@@ -1,4 +1,4 @@
-package main
+package xoauthexample
 
 import (
 	"context"
@@ -9,8 +9,12 @@ import (
 	"github.com/ninja-software/xoauth-example/oidc"
 )
 
-func request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient, codeVerifier string, codeChallenge string, dryRun bool, localHostPort int) {
-	redirectUri := fmt.Sprintf("http://localhost:%d/callback", localHostPort)
+func Request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient) {
+	// filler from original code
+	codeVerifier := ""
+	codeChallenge := ""
+	dryRun := false
+
 	state, stateErr := oidc.GenerateRandomStringURLSafe(24)
 	if stateErr != nil {
 		panic("failed to generate random state. Check that your OS has a crypto implementation available")
@@ -18,8 +22,8 @@ func request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient, cod
 
 	authorisationUrl := oidc.BuildCodeAuthorisationRequest(
 		wellKnownConfig,
-		client.ClientId,
-		redirectUri,
+		client.ClientID,
+		client.RedirectURL.String(),
 		client.Scopes,
 		state,
 		codeChallenge,
@@ -32,7 +36,7 @@ func request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient, cod
 
 	m := http.NewServeMux()
 	s := http.Server{
-		Addr:    fmt.Sprintf(":%d", localHostPort),
+		Addr:    fmt.Sprintf(":%s", client.RedirectURL.Port()),
 		Handler: m,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -43,9 +47,9 @@ func request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient, cod
 	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		handleOidcCallback(w, r,
 			client.Alias,
-			client.ClientId,
+			client.ClientID,
 			client.ClientSecret,
-			redirectUri,
+			client.RedirectURL.String(),
 			wellKnownConfig,
 			state,
 			codeVerifier,
@@ -69,8 +73,4 @@ func request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient, cod
 			log.Fatalln(err)
 		}
 	}
-}
-
-func Request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient, dryRun bool, localHostPort int) {
-	request(wellKnownConfig, client, "", "", dryRun, localHostPort)
 }

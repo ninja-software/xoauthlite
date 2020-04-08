@@ -1,4 +1,4 @@
-package main
+package xoauthexample
 
 import (
 	"encoding/json"
@@ -8,13 +8,13 @@ import (
 	"github.com/ninja-software/xoauth-example/oidc"
 )
 
-func Refresh(tokenSet oidc.TokenResultSet) (oidc.TokenResultSet, error) {
+func Refresh(clientConfig OidcClient, tokenSet oidc.TokenResultSet) (oidc.TokenResultSet, error) {
 	if tokenSet.RefreshToken == "" {
 		log.Fatalln("No refresh token is present in the saved credentials - unable to perform a refresh")
 	}
 
 	refreshResult, refreshErr := oidc.RefreshToken(clientConfig.Authority,
-		clientConfig.ClientId,
+		clientConfig.ClientID,
 		clientConfig.ClientSecret,
 		tokenSet.RefreshToken,
 	)

@@ -1,4 +1,4 @@
-package main
+package xoauthexample
 
 import (
 	"context"
