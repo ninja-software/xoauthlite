@@ -6,6 +6,7 @@ import (
 )
 
 type OidcClient struct {
+	Debug        bool
 	Authority    string
 	Alias        string
 	GrantType    string

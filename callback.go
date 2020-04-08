@@ -2,7 +2,6 @@ package xoauthexample
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -58,7 +57,6 @@ func handleOidcCallback(
 		renderAndLogError(w, cancel, fmt.Sprintf("%v", validateErr))
 		return
 	}
-	fmt.Printf("claims:\n%+v", claims)
 
 	// show webpage
 	t := template.New("credentials")
@@ -79,14 +77,6 @@ func handleOidcCallback(
 		renderAndLogError(w, cancel, fmt.Sprintf("%v", tplErr))
 		return
 	}
-
-	// echo json to console
-	jsonData, jsonErr := json.MarshalIndent(result, "", "    ")
-	if jsonErr != nil {
-		renderAndLogError(w, cancel, fmt.Sprintf("%v", jsonErr))
-		return
-	}
-	log.Print("Tokens", jsonData)
 
 	cancel()
 }
