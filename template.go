@@ -1,4 +1,4 @@
-package xoauthexample
+package xoauthlite
 
 // TokenResultViewModel holds data for the web result
 type TokenResultViewModel struct {

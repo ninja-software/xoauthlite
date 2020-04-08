@@ -1,4 +1,4 @@
-package xoauthexample
+package xoauthlite
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ninja-software/xoauth-example/oidc"
+	"github.com/ninja-software/xoauthlite/oidc"
 )
 
 // Request starts callback server and request token

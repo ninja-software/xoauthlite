@@ -1,4 +1,4 @@
-package xoauthexample
+package xoauthlite
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ninja-software/xoauth-example/oidc"
+	"github.com/ninja-software/xoauthlite/oidc"
 )
 
 // renderAndLogError prints the error message to the browser, then shut down the web server gracefully

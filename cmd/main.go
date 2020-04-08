@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"os"
 
-	xoauthexample "github.com/ninja-software/xoauth-example"
-	"github.com/ninja-software/xoauth-example/oidc"
+	"github.com/ninja-software/xoauthlite"
+	"github.com/ninja-software/xoauthlite/oidc"
 )
 
 func main() {
@@ -15,7 +15,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	clientConfig := &xoauthexample.OidcClient{
+	clientConfig := &xoauthlite.OidcClient{
 		Authority:    "https://identity.xero.com",
 		ClientID:     os.Getenv("XERO_CLIENT_ID"),
 		ClientSecret: os.Getenv("XERO_CLIENT_SECRET"),
@@ -35,5 +35,5 @@ func main() {
 		panic(wellKnownErr)
 	}
 
-	xoauthexample.Request(wellKnownConfig, *clientConfig)
+	xoauthlite.Request(wellKnownConfig, *clientConfig)
 }

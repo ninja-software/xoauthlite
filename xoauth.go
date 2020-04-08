@@ -1,4 +1,4 @@
-package xoauthexample
+package xoauthlite
 
 import (
 	"log"
