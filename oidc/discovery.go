@@ -28,8 +28,16 @@ type WellKnownConfiguration struct {
 	Issuer                string `json:"issuer"`
 }
 
+// singleton, since these config shouldnt change much
+var wellKnownConfiguration *WellKnownConfiguration
+
 // GetMetadata discover metadata and construct OpenID configuration
 func GetMetadata(authority string) (WellKnownConfiguration, error) {
+	// if already exist, send existing one
+	if wellKnownConfiguration != nil {
+		return *wellKnownConfiguration, nil
+	}
+
 	var result WellKnownConfiguration
 
 	var authorityBaseURL, parseErr = GetSchemeAndHost(authority)
@@ -61,6 +69,9 @@ func GetMetadata(authority string) (WellKnownConfiguration, error) {
 	if result.AuthorisationEndpoint == "" {
 		return result, fmt.Errorf("no authorisation endpoint in OIDC metadata")
 	}
+
+	// save into memory
+	wellKnownConfiguration = &result
 
 	return result, nil
 }

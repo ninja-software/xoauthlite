@@ -59,7 +59,7 @@ func Request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient) err
 
 	go func() {
 		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+			log.Println(err)
 		}
 	}()
 
@@ -68,7 +68,7 @@ func Request(wellKnownConfig oidc.WellKnownConfiguration, client OidcClient) err
 		// Shutdown the server when the context is canceled
 		err := s.Shutdown(ctx)
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
 		}
 	}
 

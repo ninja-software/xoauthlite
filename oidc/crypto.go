@@ -11,12 +11,12 @@ import (
 // Adapted from https://gist.github.com/dopey/c69559607800d2f2f90b1b1ed4e550fb
 
 func init() {
-	assertAvailablePRNG()
+	// assertAvailablePRNG()
 }
 
+// Assert that a cryptographically secure PRNG is available.
+// Panic otherwise.
 func assertAvailablePRNG() {
-	// Assert that a cryptographically secure PRNG is available.
-	// Panic otherwise.
 	buf := make([]byte, 1)
 
 	_, err := io.ReadFull(rand.Reader, buf)
