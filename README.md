@@ -1,6 +1,6 @@
 # XOAuth lite
 
-> A reduced version of XOAuth
+> A cutdown version of [XOAuth](https://github.com/XeroAPI/xoauth) from Xero, for example and library use
 
 XOAuth provides a simple way to interact with OpenId Connect identity providers from your local CLI. Many OIDC providers only support the Authorisation Code grant - and that means running a local web server to receive the authorisation response, or using something like [Postman](https://www.postman.com/). These can be tricky to fit into a scripted workflow in a shell.
 
@@ -17,3 +17,7 @@ This tool saves you time, by:
 ### Example
 
 `go run cmd/allinone/main.go`
+
+## Disclaimer
+
+Not production ready
