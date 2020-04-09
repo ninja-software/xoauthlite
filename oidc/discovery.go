@@ -32,13 +32,13 @@ type WellKnownConfiguration struct {
 var wellKnownConfiguration *WellKnownConfiguration
 
 // GetMetadata discover metadata and construct OpenID configuration
-func GetMetadata(authority string) (WellKnownConfiguration, error) {
+func GetMetadata(authority string) (*WellKnownConfiguration, error) {
 	// if already exist, send existing one
 	if wellKnownConfiguration != nil {
-		return *wellKnownConfiguration, nil
+		return wellKnownConfiguration, nil
 	}
 
-	var result WellKnownConfiguration
+	var result *WellKnownConfiguration
 
 	var authorityBaseURL, parseErr = GetSchemeAndHost(authority)
 	if parseErr != nil {
@@ -71,7 +71,7 @@ func GetMetadata(authority string) (WellKnownConfiguration, error) {
 	}
 
 	// save into memory
-	wellKnownConfiguration = &result
+	wellKnownConfiguration = result
 
 	return result, nil
 }

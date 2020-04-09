@@ -16,4 +16,4 @@ This tool saves you time, by:
 
 ### Example
 
-`go run cmd/main.go`
+`go run cmd/allinone/main.go`

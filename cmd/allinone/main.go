@@ -9,6 +9,9 @@ import (
 	"github.com/ninja-software/xoauthlite/oidc"
 )
 
+// quick and easy get token,
+// auto start/stop http server
+
 func main() {
 	u, err := url.Parse("http://localhost:8080/callback")
 	if err != nil {
@@ -16,18 +19,11 @@ func main() {
 	}
 
 	clientConfig := &xoauthlite.OidcClient{
-		Authority:    "https://identity.xero.com",
+		Authority:    oidc.DefaultAuthority,
 		ClientID:     os.Getenv("XERO_CLIENT_ID"),
 		ClientSecret: os.Getenv("XERO_CLIENT_SECRET"),
-		Scopes: []string{
-			"openid",
-			"profile",
-			"email",
-			"accounting.contacts",
-			"accounting.transactions",
-			"offline_access",
-		},
-		RedirectURL: u,
+		Scopes:       oidc.DefaultScopes,
+		RedirectURL:  u,
 	}
 
 	var wellKnownConfig, wellKnownErr = oidc.GetMetadata(clientConfig.Authority)
@@ -35,5 +31,5 @@ func main() {
 		panic(wellKnownErr)
 	}
 
-	xoauthlite.Request(wellKnownConfig, *clientConfig)
+	xoauthlite.Request(*wellKnownConfig, *clientConfig)
 }
