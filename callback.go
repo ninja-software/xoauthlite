@@ -23,7 +23,7 @@ func renderAndLogError(w http.ResponseWriter, cancelFunc context.CancelFunc, err
 }
 
 // handleOidcCallback waits for the OIDC server to redirect to our listening web server
-// It exchanges the `code` for a token set. If successful, the token set is logged to StdOut,
+// It exchanges the `code` for a token set. If successful, the token is shown on webpage
 // and the web server is shut down gracefully
 func handleOidcCallback(
 	w http.ResponseWriter,
@@ -43,17 +43,9 @@ func handleOidcCallback(
 		return
 	}
 
-	echo("Received OIDC response")
-	var result, codeExchangeErr = oidc.ExchangeCodeForToken(wellKnownConfig.TokenEndpoint, authorisationResponse.Code, clientID, clientSecret, codeVerifier, redirectURI)
-	if codeExchangeErr != nil {
-		renderAndLogError(w, cancel, fmt.Sprintf("%v", codeExchangeErr))
-		return
-	}
-
-	echo("Validating token")
-	var claims, validateErr = oidc.ValidateToken(result.IdentityToken, wellKnownConfig)
-	if validateErr != nil {
-		renderAndLogError(w, cancel, fmt.Sprintf("%v", validateErr))
+	viewModel, err := VerifyCode(clientID, clientSecret, redirectURI, wellKnownConfig, codeVerifier, authorisationResponse.Code)
+	if err != nil {
+		renderAndLogError(w, cancel, fmt.Sprintf("%v", err))
 		return
 	}
 
@@ -64,13 +56,6 @@ func handleOidcCallback(
 		renderAndLogError(w, cancel, fmt.Sprintf("%v", parseErr))
 		return
 	}
-	var viewModel = TokenResultViewModel{
-		AccessToken:  result.AccessToken,
-		RefreshToken: result.RefreshToken,
-		IDToken:      result.IdentityToken,
-		Claims:       claims,
-		Authority:    wellKnownConfig.Issuer,
-	}
 	tplErr := t.Execute(w, viewModel)
 	if tplErr != nil {
 		renderAndLogError(w, cancel, fmt.Sprintf("%v", tplErr))
@@ -78,4 +63,36 @@ func handleOidcCallback(
 	}
 
 	cancel()
+}
+
+// VerifyCode exchange `code` and turn into token
+func VerifyCode(
+	clientID string,
+	clientSecret string,
+	redirectURI string,
+	wellKnownConfig oidc.WellKnownConfiguration,
+	codeVerifier string,
+	code string,
+) (*TokenResultViewModel, error) {
+	// 	echo("Received OIDC response")
+	var result, codeExchangeErr = oidc.ExchangeCodeForToken(wellKnownConfig.TokenEndpoint, code, clientID, clientSecret, codeVerifier, redirectURI)
+	if codeExchangeErr != nil {
+		return nil, codeExchangeErr
+	}
+
+	// echo("Validating token")
+	var claims, validateErr = oidc.ValidateToken(result.IdentityToken, wellKnownConfig)
+	if validateErr != nil {
+		return nil, validateErr
+	}
+
+	var viewModel = &TokenResultViewModel{
+		AccessToken:  result.AccessToken,
+		RefreshToken: result.RefreshToken,
+		IDToken:      result.IdentityToken,
+		Claims:       claims,
+		Authority:    wellKnownConfig.Issuer,
+	}
+
+	return viewModel, nil
 }
