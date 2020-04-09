@@ -6,6 +6,9 @@ import (
 	"time"
 )
 
+// Version of xoauth lite
+const Version = "0.1.0"
+
 // OidcClient holds detail of oauth connection client
 type OidcClient struct {
 	Alias        string
