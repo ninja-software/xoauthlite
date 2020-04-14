@@ -13,6 +13,8 @@ import (
 	"github.com/ninja-software/xoauthlite/oidc"
 )
 
+var gViewModel *xoauthlite.TokenResultViewModel
+
 // manually setup http server and get token
 
 func main() {
@@ -21,10 +23,19 @@ func main() {
 		log.Fatal(err)
 	}
 
+	clientID := os.Getenv("XERO_CLIENT_ID")
+	clientSecret := os.Getenv("XERO_CLIENT_SECRET")
+	if clientID == "" {
+		log.Fatal(fmt.Errorf("empty client id"))
+	}
+	if clientSecret == "" {
+		log.Fatal(fmt.Errorf("empty client secret"))
+	}
+
 	clientConfig := &xoauthlite.OidcClient{
 		Authority:    oidc.DefaultAuthority,
-		ClientID:     os.Getenv("XERO_CLIENT_ID"),
-		ClientSecret: os.Getenv("XERO_CLIENT_SECRET"),
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
 		Scopes:       oidc.DefaultScopes,
 		RedirectURL:  u,
 	}
@@ -83,6 +94,17 @@ func main() {
 			log.Println(err)
 		}
 	}
+
+	// prepare to print to screen
+	viewModel := *gViewModel
+	viewModel.Claims = nil
+	jsonData, jsonErr := json.MarshalIndent(viewModel, "", "    ")
+	if jsonErr != nil {
+		log.Println("failed to parse to json format")
+		cancel()
+		return
+	}
+	fmt.Println(string(jsonData))
 }
 
 func handler(cc *xoauthlite.OidcClient, wellKnownConfig *oidc.WellKnownConfiguration, codeVerifier, state string, cancel context.CancelFunc) http.HandlerFunc {
@@ -99,24 +121,13 @@ func handler(cc *xoauthlite.OidcClient, wellKnownConfig *oidc.WellKnownConfigura
 			return
 		}
 
-		viewModel, err := xoauthlite.VerifyCode(cc.ClientID, cc.ClientSecret, cc.RedirectURL.String(), *wellKnownConfig, codeVerifier, authorisationResponse.Code)
+		gViewModel, err = xoauthlite.VerifyCode(cc.ClientID, cc.ClientSecret, cc.RedirectURL.String(), *wellKnownConfig, codeVerifier, authorisationResponse.Code)
 		if err != nil {
 			log.Println(err)
 			cancel()
 			return
 		}
 
-		// prepare to print to screen
-		viewModel2 := *viewModel
-		viewModel2.Claims = nil
-		jsonData, jsonErr := json.MarshalIndent(viewModel2, "", "    ")
-		if jsonErr != nil {
-			log.Println("failed to parse to json format")
-			cancel()
-			return
-		}
-
-		fmt.Println(string(jsonData))
 		w.Write([]byte("{\"status\": \"success\"}"))
 		cancel()
 	}

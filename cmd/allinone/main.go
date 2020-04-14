@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/url"
 	"os"
@@ -18,10 +19,19 @@ func main() {
 		log.Fatal(err)
 	}
 
+	clientID := os.Getenv("XERO_CLIENT_ID")
+	clientSecret := os.Getenv("XERO_CLIENT_SECRET")
+	if clientID == "" {
+		log.Fatal(fmt.Errorf("empty client id"))
+	}
+	if clientSecret == "" {
+		log.Fatal(fmt.Errorf("empty client secret"))
+	}
+
 	clientConfig := &xoauthlite.OidcClient{
 		Authority:    oidc.DefaultAuthority,
-		ClientID:     os.Getenv("XERO_CLIENT_ID"),
-		ClientSecret: os.Getenv("XERO_CLIENT_SECRET"),
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
 		Scopes:       oidc.DefaultScopes,
 		RedirectURL:  u,
 	}
