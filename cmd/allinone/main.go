@@ -14,18 +14,18 @@ import (
 // auto start/stop http server
 
 func main() {
-	u, err := url.Parse("http://localhost:8080/callback")
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	clientID := os.Getenv("XERO_CLIENT_ID")
 	clientSecret := os.Getenv("XERO_CLIENT_SECRET")
+	redirectURL := os.Getenv("XERO_REDIRECT_URL")
 	if clientID == "" {
 		log.Fatal(fmt.Errorf("empty client id"))
 	}
 	if clientSecret == "" {
 		log.Fatal(fmt.Errorf("empty client secret"))
+	}
+	u, err := url.Parse(redirectURL)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	clientConfig := &xoauthlite.OidcClient{
