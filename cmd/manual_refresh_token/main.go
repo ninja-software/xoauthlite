@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/ninja-software/xoauthlite"
 	"github.com/ninja-software/xoauthlite/oidc"
@@ -98,13 +99,40 @@ func main() {
 	// prepare to print to screen
 	viewModel := *gViewModel
 	viewModel.Claims = nil
-	jsonData, jsonErr := json.MarshalIndent(viewModel, "", "    ")
+	jsonBytes, jsonErr := json.MarshalIndent(viewModel, "", "    ")
 	if jsonErr != nil {
 		log.Println("failed to parse to json format")
 		cancel()
 		return
 	}
-	fmt.Println(string(jsonData))
+	log.Println(string(jsonBytes) + "\n")
+
+	refreshToken := viewModel.RefreshToken
+
+	for true {
+		time.Sleep(time.Second * 60)
+
+		log.Println("refreshing token...")
+		refreshResult, err := oidc.RefreshToken(
+			oidc.DefaultAuthority,
+			clientID,
+			clientSecret,
+			refreshToken,
+		)
+		if err != nil {
+			log.Println("failed to refresh token", err)
+		}
+
+		// update refresh token
+		refreshToken = refreshResult.RefreshToken
+
+		jsonBytes, jsonErr := json.MarshalIndent(refreshResult, "", "    ")
+		if jsonErr != nil {
+			log.Println("failed to parse to json format")
+			return
+		}
+		log.Println(string(jsonBytes) + "\n")
+	}
 }
 
 func handler(cc *xoauthlite.OidcClient, wellKnownConfig *oidc.WellKnownConfiguration, codeVerifier, state string, cancel context.CancelFunc) http.HandlerFunc {
